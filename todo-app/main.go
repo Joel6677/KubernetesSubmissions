@@ -7,7 +7,15 @@ import (
 )
 
 func getRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Moi!")
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, `
+			<html>
+				<body>
+					<h1>Todo App</h1>
+					<p>Moi!</p>
+				</body>
+			</html>
+		`)
 }
 
 func main() {
