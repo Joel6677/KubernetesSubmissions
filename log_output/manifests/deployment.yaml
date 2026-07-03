@@ -14,4 +14,7 @@ spec:
     spec:
       containers:
         - name: log-output
-          image: joelheusala/log-output:1.1
+          image: joelheusala/log-output:1.7
+          env:
+            - name: PORT
+              value: "8080"
