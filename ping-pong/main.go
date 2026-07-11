@@ -4,12 +4,25 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 )
 
-var count = 0
+func getCounter() int {
+	content, err := os.ReadFile("/shared/pings.txt")
+	if err != nil {
+		return 0
+	}
+	count, err := strconv.Atoi(strings.TrimSpace(string(content)))
+	if err != nil {
+		return 0
+	}
+	return count
+}
 
 func pingpong(w http.ResponseWriter, r *http.Request) {
-	count++
+	count := getCounter() + 1
+	os.WriteFile("/shared/pings.txt", []byte(strconv.Itoa(count)), 0644)
 	fmt.Fprintf(w, "pong %d", count)
 }
 

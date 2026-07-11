@@ -13,20 +13,21 @@ spec:
         app: log-output
     spec:
       volumes: # Define volume
-        - name: shared-files
-          emptyDir: {}
+        - name: shared-image
+          persistentVolumeClaim:
+            claimName: image-claim
       containers:
           - name: generator
             image: joelheusala/log-output-generator:1.10
             volumeMounts:
-              - name: shared-files
+              - name: shared-image
                 mountPath: /shared
           - name: reader
-            image: joelheusala/log-output-reader:1.10
+            image: joelheusala/log-output-reader:1.11
             env:
               - name: PORT
                 value: "8080"
             volumeMounts:
-              - name: shared-files
+              - name: shared-image
                 mountPath: /shared
      

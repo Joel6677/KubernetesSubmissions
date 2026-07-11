@@ -12,9 +12,16 @@ spec:
       labels:
         app: ping-pong
     spec:
+      volumes:
+        - name: shared-image
+          persistentVolumeClaim:
+            claimName: image-claim
       containers:
         - name: ping-pong
-          image: joelheusala/ping-pong:1.9
+          image: joelheusala/ping-pong:1.11
           env:
             - name: PORT
               value: "8080"
+          volumeMounts:
+            - name: shared-image
+              mountPath: /shared
