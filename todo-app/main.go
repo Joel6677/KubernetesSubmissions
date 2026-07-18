@@ -1,17 +1,28 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"time"
 )
 
 const (
-	imgPath = "/tmp/img.jpg"
+	imgPath = "/shared/img.jpg"
 	imgURL  = "https://picsum.photos/1200"
 )
+
+var client = &http.Client{
+	Timeout: 15 * time.Second,
+	Transport: &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, "tcp4", addr)
+		},
+	},
+}
 
 func getImageTime() time.Duration {
 	fileInfo, err := os.Stat(imgPath)
@@ -22,21 +33,26 @@ func getImageTime() time.Duration {
 }
 
 func fetchAndSaveImage() error {
-	res, err := http.Get(imgURL)
+	req, err := http.NewRequest(http.MethodGet, imgURL, nil)
 	if err != nil {
+		return err
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error fetching image:", err)
 		return err
 	}
 	defer res.Body.Close()
 
 	file, err := os.Create(imgPath)
 	if err != nil {
+		fmt.Println("Error creating file:", err)
 		return err
 	}
-
 	defer file.Close()
 
 	_, err = io.Copy(file, res.Body)
-
 	return err
 }
 
@@ -80,7 +96,12 @@ func main() {
 
 	if getImageTime() > 10*time.Minute {
 		fmt.Println("Fetching new image...")
-		fetchAndSaveImage()
+		err := fetchAndSaveImage()
+		if err != nil {
+			fmt.Println("Error fetching image:", err)
+		} else {
+			fmt.Println("Image saved successfully")
+		}
 	}
 
 	http.HandleFunc("/", indexHandler)

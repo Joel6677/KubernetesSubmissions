@@ -19,6 +19,7 @@ spec:
       containers:
         - name: todo-app
           image: joelheusala/todo-app:1.12
+          imagePullPolicy: Always
           env:
             - name: PORT
               value: "8080"
