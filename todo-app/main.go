@@ -59,9 +59,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, `
 			<html>
-				<head>
-				    <meta http-equiv="refresh" content="600">
-				</head>
 				<body>
 					<h1>Todo App</h1>
 					<img src="/image" width="600" />
