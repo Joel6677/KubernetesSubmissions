@@ -75,12 +75,42 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, `
 			<html>
+				<head>
+					<script>
+						function addTodo() {
+						    const input = document.getElementById('todo');
+						    const todo = input.value;
+						    if (todo.length === 0) return;
+						    if (todo.length > 140) {
+							alert('Todo is over 140 characters!');
+							return;
+						    }
+						    const li = document.createElement('li');
+						    li.textContent = todo;
+						    document.getElementById('todo-list').appendChild(li);
+						    input.value = '';
+						}
+					</script>
+				</head>
 				<body>
 					<h1>Todo App</h1>
 					<img src="/image" width="600" />
-					<script>
-						console.log("image loaded")
-					</script>
+					<br><br>
+					<form>
+						<input 
+							type="text" 
+							id="todo" 
+							maxlength="140" 
+							placeholder="Enter a new todo (max 140 characters)"
+							size="50"
+						/>
+						<button type="button" onclick="addTodo()">Send</button>
+					</form>
+					<ul id="todo-list">
+					<li>Learn kubernetes basics</li>
+					<li>Deploy application to cluster</li>
+					<li>Configure persistent volumes</li>
+					</ul>
 				</body>
 			</html>
 		`)
