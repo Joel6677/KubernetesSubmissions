@@ -15,6 +15,7 @@ spec:
       containers:
         - name: ping-pong
           image: joelheusala/ping-pong:2.1
+          imagePullPolicy: Always
           env:
             - name: PORT
               value: "8080"

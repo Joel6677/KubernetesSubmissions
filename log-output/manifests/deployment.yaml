@@ -19,16 +19,18 @@ spec:
       containers:
           - name: generator
             image: joelheusala/log-output-generator:1.10
+            imagePullPolicy: Always
             volumeMounts:
               - name: shared-image
                 mountPath: /shared
           - name: reader
             image: joelheusala/log-output-reader:2.1
+            imagePullPolicy: Always
             env:
               - name: PORT
                 value: "8080"
               - name: PINGPONG_URL
-                value: "http://ping-pong-svc:8080/pings"
+                value: "http://ping-pong-svc:2345/pings"
             volumeMounts:
               - name: shared-image
                 mountPath: /shared

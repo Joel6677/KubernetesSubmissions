@@ -10,7 +10,7 @@ import (
 func getPings() string {
 	pingPongURL := os.Getenv("PINGPONG_URL")
 	if pingPongURL == "" {
-		pingPongURL = "http://ping-pong-svc:8080/pings"
+		pingPongURL = "http://ping-pong-svc:2345/pings"
 	}
 
 	res, err := http.Get(pingPongURL)
@@ -47,6 +47,6 @@ func main() {
 	}
 
 	fmt.Printf("Server started in port %s\n", port)
-	http.HandleFunc("/status", getStatus)
+	http.HandleFunc("/", getStatus)
 	http.ListenAndServe(":"+port, nil)
 }
