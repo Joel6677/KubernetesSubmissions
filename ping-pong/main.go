@@ -4,26 +4,17 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 )
 
-func getCounter() int {
-	content, err := os.ReadFile("/shared/pings.txt")
-	if err != nil {
-		return 0
-	}
-	count, err := strconv.Atoi(strings.TrimSpace(string(content)))
-	if err != nil {
-		return 0
-	}
-	return count
-}
+var pings = 0
 
 func pingpong(w http.ResponseWriter, r *http.Request) {
-	count := getCounter() + 1
-	os.WriteFile("/shared/pings.txt", []byte(strconv.Itoa(count)), 0644)
-	fmt.Fprintf(w, "pong %d", count)
+	pings++
+	fmt.Fprintf(w, "pong %d", pings)
+}
+
+func pingCounter(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "%d", pings)
 }
 
 func main() {
@@ -35,6 +26,8 @@ func main() {
 	fmt.Printf("Server started in port %s\n", port)
 
 	http.HandleFunc("/pingpong", pingpong)
+
+	http.HandleFunc("/pings", pingCounter)
 
 	http.ListenAndServe(":"+port, nil)
 }

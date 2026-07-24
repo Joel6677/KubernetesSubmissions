@@ -23,10 +23,12 @@ spec:
               - name: shared-image
                 mountPath: /shared
           - name: reader
-            image: joelheusala/log-output-reader:1.11
+            image: joelheusala/log-output-reader:2.1
             env:
               - name: PORT
                 value: "8080"
+              - name: PINGPONG_URL
+                value: "http://ping-pong-svc:8080/pings"
             volumeMounts:
               - name: shared-image
                 mountPath: /shared

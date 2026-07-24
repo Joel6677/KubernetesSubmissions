@@ -2,10 +2,30 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"strings"
 )
+
+func getPings() string {
+	pingPongURL := os.Getenv("PINGPONG_URL")
+	if pingPongURL == "" {
+		pingPongURL = "http://ping-pong-svc:8080/pings"
+	}
+
+	res, err := http.Get(pingPongURL)
+	if err != nil {
+		fmt.Println("Error fetching ping count:", err)
+		return "0"
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "0"
+	}
+	return string(body)
+}
 
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	content, err := os.ReadFile("/shared/output.txt")
@@ -14,13 +34,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pings, err := os.ReadFile("/shared/pings.txt")
-
-	pCount := "0"
-
-	if err == nil {
-		pCount = strings.TrimSpace(string(pings))
-	}
+	pCount := getPings()
 
 	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprintf(w, "%s\nPing / Pongs: %s\n", string(content), pCount)
