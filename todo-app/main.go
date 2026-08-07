@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -9,6 +11,44 @@ import (
 	"os"
 	"time"
 )
+
+type Todo struct {
+	ID   int    `json:"id"`
+	Text string `json:"text"`
+}
+
+func getTodoBackendURL() string {
+	url := os.Getenv("TODO_BACKEND_URL")
+	if url == "" {
+		url = "http://todo-backend-svc:8080/todos"
+	}
+	return url
+}
+
+func fetchTodos() ([]Todo, error) {
+	res, err := http.Get(getTodoBackendURL())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var todos []Todo
+	if err := json.NewDecoder(res.Body).Decode(&todos); err != nil {
+		return nil, err
+	}
+	return todos, nil
+}
+
+func createTodo(text string) error {
+	body, _ := json.Marshal(map[string]string{"text": text})
+	res, err := http.Post(getTodoBackendURL(), "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	io.ReadAll(res.Body)
+	return nil
+}
 
 const (
 	imgPath = "/shared/img.jpg"
@@ -72,48 +112,78 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	var formError string
+
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		text := r.FormValue("text")
+
+		if text == "" {
+			formError = "Todo cant be empty"
+		} else if len([]rune(text)) > 140 {
+			formError = "Todo must be max 140 characters"
+		} else {
+			if err := createTodo(text); err != nil {
+				fmt.Println("Error creating todo:", err)
+				formError = "Failed to save todo, try again"
+			} else {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
+			}
+		}
+	}
+
+	todos, err := fetchTodos()
+	if err != nil {
+		fmt.Println("Error fetching todos:", err)
+	}
+
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, `
-			<html>
-				<head>
-					<script>
-						function addTodo() {
-						    const input = document.getElementById('todo');
-						    const todo = input.value;
-						    if (todo.length === 0) return;
-						    if (todo.length > 140) {
-							alert('Todo is over 140 characters!');
-							return;
-						    }
-						    const li = document.createElement('li');
-						    li.textContent = todo;
-						    document.getElementById('todo-list').appendChild(li);
-						    input.value = '';
-						}
-					</script>
-				</head>
-				<body>
-					<h1>Todo App</h1>
-					<img src="/image" width="600" />
-					<br><br>
-					<form>
-						<input 
-							type="text" 
-							id="todo" 
-							maxlength="140" 
-							placeholder="Enter a new todo (max 140 characters)"
-							size="50"
-						/>
-						<button type="button" onclick="addTodo()">Send</button>
-					</form>
-					<ul id="todo-list">
+		<html>
+			<head>
+				<style>
+					body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+					input[type=text] {
+						width: 100%%;
+						padding: 12px;
+						font-size: 16px;
+						box-sizing: border-box;
+					}
+					button {
+						padding: 10px 20px;
+						font-size: 16px;
+						margin-top: 8px;
+					}
+					.error { color: red; }
+				</style>
+			</head>
+			<body>
+				<h1>Todo App</h1>
+				<img src="/image" width="600" /><br/><br/>
+	`)
+	if formError != "" {
+		fmt.Fprintf(w, `<p class="error">%s</p>`, formError)
+	}
+	fmt.Fprintf(w, `
+				<form method="POST" action="/">
+					<input type="text" name="text" placeholder="Enter a new todo (max 140 characters)" maxlength="140" required />
+					<button type="submit">Add</button>
+				</form>
+				<ul>
 					<li>Learn kubernetes basics</li>
 					<li>Deploy application to cluster</li>
 					<li>Configure persistent volumes</li>
-					</ul>
-				</body>
-			</html>
-		`)
+
+	`)
+	for _, t := range todos {
+		fmt.Fprintf(w, "<li>%s</li>\n", t.Text)
+	}
+	fmt.Fprint(w, `
+				</ul>
+			</body>
+		</html>
+	`)
 }
 
 func main() {
