@@ -5,6 +5,7 @@ metadata:
   namespace: exercises
 spec:
   rules:
+  - host: exercises.localhost
   - http:
       paths:
       - path: /status

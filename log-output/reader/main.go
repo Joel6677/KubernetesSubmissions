@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func getPings() string {
@@ -34,10 +35,21 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fileContent, err := os.ReadFile("/config/information.txt")
+	fileText := ""
+	if err != nil {
+		fileText = "could not read file"
+	} else {
+		fileText = strings.TrimSpace(string(fileContent))
+	}
+
+	message := os.Getenv("MESSAGE")
+
 	pCount := getPings()
 
 	w.Header().Set("Content-Type", "text/plain")
-	fmt.Fprintf(w, "%s\nPing / Pongs: %s\n", string(content), pCount)
+	fmt.Fprintf(w, "file content: %s\nenv variable: MESSAGE=%s\n%s\nPing / Pongs: %s\n",
+		fileText, message, string(content), pCount)
 }
 
 func main() {
