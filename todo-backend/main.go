@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -18,6 +19,14 @@ var (
 	todos  = []Todo{}
 	nextID = 1
 )
+
+func getEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("environment value %s is not set", key)
+	}
+	return v
+}
 
 func todosHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -58,9 +67,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+
 	fmt.Printf("todo-backend started on port %s\n", port)
 	http.HandleFunc("/todos", todosHandler)
 	http.ListenAndServe(":"+port, nil)

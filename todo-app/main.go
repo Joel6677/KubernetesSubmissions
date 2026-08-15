@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -17,12 +18,16 @@ type Todo struct {
 	Text string `json:"text"`
 }
 
-func getTodoBackendURL() string {
-	url := os.Getenv("TODO_BACKEND_URL")
-	if url == "" {
-		url = "http://todo-backend-svc:8080/todos"
+func getEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("environment value %s is not set", key)
 	}
-	return url
+	return v
+}
+
+func getTodoBackendURL() string {
+	return getEnv("TODO_BACKEND_URL")
 }
 
 func fetchTodos() ([]Todo, error) {
@@ -50,9 +55,9 @@ func createTodo(text string) error {
 	return nil
 }
 
-const (
-	imgPath = "/shared/img.jpg"
-	imgURL  = "https://picsum.photos/1200"
+var (
+	imgPath = getEnv("IMG_PATH")
+	imgURL  = getEnv("IMG_URL")
 )
 
 var client = &http.Client{
@@ -187,10 +192,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := getEnv("PORT")
 
 	fmt.Printf("Server started in port %s\n", port)
 

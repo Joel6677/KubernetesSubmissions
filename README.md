@@ -25,6 +25,8 @@
 - [2.3.](https://github.com/Joel6677/KubernetesSubmissions/tree/2.3)
 - [2.4.](https://github.com/Joel6677/KubernetesSubmissions/tree/2.4)
 - [2.5.](https://github.com/Joel6677/KubernetesSubmissions/tree/2.5)
+- [2.6.](https://github.com/Joel6677/KubernetesSubmissions/tree/2.6)
+
 
 
 
