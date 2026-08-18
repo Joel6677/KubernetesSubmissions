@@ -1,32 +1,86 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
-var pings = 0
+var db *sql.DB
+
+func getEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("environment value %s is not set", key)
+	}
+	return v
+}
+
+func initDB() {
+	connStr := getEnv("DATABASE_URL")
+
+	var err error
+
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("failed to open db: %v", err)
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS counter (id INT PRIMARY KEY, count INT NOT NULL)`)
+	if err != nil {
+		log.Fatalf("failed to create table: %v", err)
+	}
+
+	_, err = db.Exec(`INSERT INTO counter (id, count) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`)
+	if err != nil {
+		log.Fatalf("failed to seed counter: %v", err)
+	}
+}
+
+func incrementAndGet() (int, error) {
+	var count int
+	err := db.QueryRow(`UPDATE counter SET count = count + 1 WHERE id = 1 RETURNING count`).Scan(&count)
+	return count, err
+}
+
+func getCount() (int, error) {
+	var count int
+	err := db.QueryRow(`SELECT count FROM counter WHERE id = 1`).Scan(&count)
+	return count, err
+}
 
 func pingpong(w http.ResponseWriter, r *http.Request) {
-	pings++
-	fmt.Fprintf(w, "pong %d", pings)
+	count, err := incrementAndGet()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		fmt.Println("Error incrementing counter:", err)
+		return
+	}
+	fmt.Fprintf(w, "pong %d", count)
 }
 
 func pingCounter(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%d", pings)
+	count, err := getCount()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		fmt.Println("Error fetching counter:", err)
+		return
+	}
+	fmt.Fprintf(w, "%d", count)
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := getEnv("PORT")
+
+	initDB()
 
 	fmt.Printf("Server started in port %s\n", port)
 
 	http.HandleFunc("/pingpong", pingpong)
-
 	http.HandleFunc("/pings", pingCounter)
 
 	http.ListenAndServe(":"+port, nil)

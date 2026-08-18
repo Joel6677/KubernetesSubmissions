@@ -15,8 +15,25 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: joelheusala/ping-pong:2.1
+          image: joelheusala/ping-pong:2.7
           imagePullPolicy: Always
           env:
             - name: PORT
               value: "8080"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_DB
+            - name: DATABASE_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres-svc:5432/$(POSTGRES_DB)?sslmode=disable"
