@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"sync"
+
+	_ "github.com/lib/pq"
 )
 
 type Todo struct {
@@ -14,11 +16,7 @@ type Todo struct {
 	Text string `json:"text"`
 }
 
-var (
-	mu     sync.Mutex
-	todos  = []Todo{}
-	nextID = 1
-)
+var db *sql.DB
 
 func getEnv(key string) string {
 	v := os.Getenv(key)
@@ -28,11 +26,66 @@ func getEnv(key string) string {
 	return v
 }
 
+func initDB() {
+	connStr := getEnv("DATABASE_URL")
+	var err error
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("failed to open db: %v", err)
+	}
+
+	if err := db.Ping(); err != nil {
+		log.Fatalf("failed to ping db: %v", err)
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS todos (
+			id SERIAL PRIMARY KEY,
+			text TEXT NOT NULL
+		)
+	`)
+	if err != nil {
+		log.Fatalf("failed to create table: %v", err)
+	}
+}
+
+func getTodos() ([]Todo, error) {
+	rows, err := db.Query(`SELECT id, text FROM todos ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	todos := []Todo{}
+	for rows.Next() {
+		var t Todo
+		if err := rows.Scan(&t.ID, &t.Text); err != nil {
+			return nil, err
+		}
+		todos = append(todos, t)
+	}
+	return todos, nil
+}
+
+func insertTodo(text string) (Todo, error) {
+	var t Todo
+	t.Text = text
+	err := db.QueryRow(
+		`INSERT INTO todos (text) VALUES ($1) RETURNING id`,
+		text,
+	).Scan(&t.ID)
+	return t, err
+}
+
 func todosHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		mu.Lock()
-		defer mu.Unlock()
+		todos, err := getTodos()
+		if err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			fmt.Println("Error fetching todos:", err)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todos)
 
@@ -50,11 +103,12 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		mu.Lock()
-		newTodo := Todo{ID: nextID, Text: body.Text}
-		nextID++
-		todos = append(todos, newTodo)
-		mu.Unlock()
+		newTodo, err := insertTodo(body.Text)
+		if err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			fmt.Println("Error inserting todo:", err)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -67,6 +121,8 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	port := os.Getenv("PORT")
+
+	initDB()
 
 	fmt.Printf("todo-backend started on port %s\n", port)
 	http.HandleFunc("/todos", todosHandler)

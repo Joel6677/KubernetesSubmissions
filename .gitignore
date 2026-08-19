@@ -1,0 +1,6 @@
+todo-backend/todo-backend
+todo-app/todo-app
+log-output/reader/reader
+*.exe
+*.test
+
