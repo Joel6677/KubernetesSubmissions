@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -77,6 +78,34 @@ func insertTodo(text string) (Todo, error) {
 	return t, err
 }
 
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func newResponseWriter(w http.ResponseWriter) *responseWriter {
+	return &responseWriter{w, http.StatusOK}
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wrapped := newResponseWriter(w)
+
+		next(wrapped, r)
+
+		log.Printf(
+			"method=%s path=%s status=%d duration=%s remote=%s",
+			r.Method, r.URL.Path, wrapped.statusCode, time.Since(start), r.RemoteAddr,
+		)
+	}
+}
+
 func todosHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -99,6 +128,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(body.Text) > 140 {
+			log.Printf("todo is too long (%d chars): %q", len(body.Text), body.Text)
 			http.Error(w, "Todo text is over 140 characters", http.StatusBadRequest)
 			return
 		}
@@ -120,8 +150,9 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := os.Getenv("PORT")
+	log.SetOutput(os.Stdout)
 
+	port := os.Getenv("PORT")
 	initDB()
 
 	fmt.Printf("todo-backend started on port %s\n", port)
