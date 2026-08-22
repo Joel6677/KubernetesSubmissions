@@ -5,6 +5,7 @@ metadata:
   namespace: project
 spec:
   schedule: "0 * * * *"
+  suspend: true
   jobTemplate:
     spec:
       template:

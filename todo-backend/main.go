@@ -151,11 +151,9 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	log.SetOutput(os.Stdout)
-
-	port := os.Getenv("PORT")
+	port := getEnv("PORT")
 	initDB()
-
 	fmt.Printf("todo-backend started on port %s\n", port)
-	http.HandleFunc("/todos", todosHandler)
+	http.HandleFunc("/todos", loggingMiddleware(todosHandler))
 	http.ListenAndServe(":"+port, nil)
 }
