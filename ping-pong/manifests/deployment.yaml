@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: joelheusala/ping-pong:2.7
+          image: joelheusala/ping-pong:3.1
           imagePullPolicy: Always
           env:
             - name: PORT
