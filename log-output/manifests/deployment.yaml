@@ -25,13 +25,13 @@ spec:
                 path: information.txt
       containers:
           - name: generator
-            image: joelheusala/log-output-generator:1.10
+            image: joelheusala/log-output-generator:3.2
             imagePullPolicy: Always
             volumeMounts:
               - name: shared-image
                 mountPath: /shared
           - name: reader
-            image: joelheusala/log-output-reader:2.5
+            image: joelheusala/log-output-reader:3.2
             imagePullPolicy: Always
             env:
               - name: PORT
