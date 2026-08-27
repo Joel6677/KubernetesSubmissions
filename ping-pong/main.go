@@ -20,11 +20,6 @@ func getEnv(key string) string {
 	return v
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, "ok")
-}
-
 func initDB() {
 	connStr := getEnv("DATABASE_URL")
 
@@ -85,9 +80,7 @@ func main() {
 
 	fmt.Printf("Server started in port %s\n", port)
 
-	http.HandleFunc("/", healthHandler)
-
-	http.HandleFunc("/pingpong", pingpong)
+	http.HandleFunc("/", pingpong)
 	http.HandleFunc("/pings", pingCounter)
 
 	http.ListenAndServe(":"+port, nil)
