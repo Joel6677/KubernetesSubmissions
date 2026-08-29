@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wikipedia-reader
+spec:
+  schedule: "0 * * * *"
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: wikipedia-reader
+            image: joelheusala/wikipedia-reader:1.1
+            imagePullPolicy: Always
+            env:
+                - name: TODO_BACKEND_URL
+                  value: "http://todo-backend-svc:1234/todos"
+          restartPolicy: Never
+      backoffLimit: 2
+
