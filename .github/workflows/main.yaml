@@ -1,0 +1,93 @@
+name: Release application
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: dwk-cluster
+  GKE_ZONE: europe-north1-b
+  REGISTRY: europe-north1-docker.pkg.dev
+  REPOSITORY: my-repository
+  IMAGE: dwk-environments
+  SERVICE: dwk-environments
+  BRANCH: ${{ github.ref_name }}
+
+jobs:
+  build-publish-deploy:
+    name: Build, Publish and Deploy
+    runs-on: ubuntu-latest
+    environment: GKE_PROJECT
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+          
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
+
+      - name: 'Set up Cloud SDK'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: 'Use gcloud CLI'
+        run: gcloud info
+
+      - run: gcloud --quiet auth configure-docker $REGISTRY
+
+      - name: 'Get GKE credentials'
+        uses: 'google-github-actions/get-gke-credentials@v3'
+        with:
+          cluster_name: '${{ env.GKE_CLUSTER }}'
+          project_id: '${{ env.PROJECT_ID }}'
+          location: '${{ env.GKE_ZONE }}'
+
+      - name: Form image tags
+        run: |
+          echo "TODO_APP_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$GITHUB_SHA" >> $GITHUB_ENV
+          echo "TODO_BACKEND_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-backend:$GITHUB_SHA" >> $GITHUB_ENV
+          echo "WIKIPEDIA_READER_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/wikipedia-reader:$GITHUB_SHA" >> $GITHUB_ENV
+
+      - name: Build todo-app
+        run: docker build --tag $TODO_APP_IMAGE ./todo-app
+
+      - name: Build todo-backend
+        run: docker build --tag $TODO_BACKEND_IMAGE ./todo-backend
+
+      - name: Build wikipedia-reader
+        run: docker build --tag $WIKIPEDIA_READER_IMAGE ./wikipedia-reader
+
+      - name: Publish todo-app
+        run: docker push $TODO_APP_IMAGE
+
+      - name: Publish todo-backend
+        run: docker push $TODO_BACKEND_IMAGE
+
+      - name: Publish wikipedia-reader
+        run: docker push $WIKIPEDIA_READER_IMAGE
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v3
+
+      - name: Set image tags in Kustomize
+        working-directory: project/overlays/gke
+        run: |
+          kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
+          kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
+          kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
+
+      - name: Deploy
+        working-directory: project/overlays/gke
+        run: |
+          kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/todo-app -n project
+          kubectl rollout status deployment/todo-backend -n project
+          kubectl get pods -n project -o wide
+          kubectl get gateway -n project -o wide
