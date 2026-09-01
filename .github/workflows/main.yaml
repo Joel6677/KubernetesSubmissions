@@ -3,7 +3,7 @@ name: Release application
 on:
   push:
     branches:
-      - main
+      - '**'
 
 permissions:
   contents: read
@@ -49,6 +49,15 @@ jobs:
           project_id: '${{ env.PROJECT_ID }}'
           location: '${{ env.GKE_ZONE }}'
 
+      - name: Determine namespace
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          if [ "$BRANCH" = "main" ]; then
+            echo "NAMESPACE=project" >> $GITHUB_ENV
+          else
+            echo "NAMESPACE=$BRANCH" >> $GITHUB_ENV
+          fi
+
       - name: Form image tags
         run: |
           echo "TODO_APP_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$GITHUB_SHA" >> $GITHUB_ENV
@@ -86,8 +95,11 @@ jobs:
       - name: Deploy
         working-directory: project/overlays/gke
         run: |
+          kubectl create namespace $NAMESPACE || true
+          kubectl config set-context --current --namespace=$NAMESPACE
+          kustomize edit set namespace $NAMESPACE
           kustomize build . | kubectl apply -f -
-          kubectl rollout status deployment/todo-app -n project
-          kubectl rollout status deployment/todo-backend -n project
-          kubectl get pods -n project -o wide
-          kubectl get gateway -n project -o wide
+          kubectl rollout status deployment/todo-app
+          kubectl rollout status deployment/todo-backend
+          kubectl get pods -o wide
+          kubectl get gateway -o wide
