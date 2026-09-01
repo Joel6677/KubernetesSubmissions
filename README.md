@@ -41,23 +41,16 @@
 - [3.6.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.6)
 - [3.7.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.7)
 - [3.8.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.8)
+- [3.9.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.9)
 
+### 3.9. DBaaS vs DIY
 
+#### DBaaS (Google Cloud SQL) vs. DIY (Postgres on GKE + PVC)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+| Dimension | DBaaS (Google Cloud SQL) | DIY (Postgres on GKE + PVC) |
+| :--- | :--- | :--- |
+| **Initialization Work** | **Low:** Can be initialized within minutes with a couple of commands via `gcloud` . | **High:** Requires writing custom Kubernetes manifests (`StatefulSet`, `PVC`, `StorageClass`, `Service`, `Secret`). |
+| **Maintenance Effort** | **Low:** Provider handles node rollouts, PostgreSQL updates, automated replication/failover, and hardware health. | **High:** Node rollouts could cause downtime unless a complex multinode system is setup. Minor/major engine upgrades have to be done manually. Storage scaling, and HA failovers have to be taken care of. |
+| **Backup Methods** | **Seamless:** Native point-in-time recovery (PITR) and scheduled automated snapshots via GCP console/API and zero downtime restores. | **Complex:** Custom backup cronjobs or backup tools are required |
+| **Infrastructure Cost** | **Higher:** Infrastructure cost is higher due to included management layer and vendor markup. | **Lower:** Direct infrastructure cost is lower because it uses standard GKE worker node pool compute and persistent disks without management overhead markups |
+| **Total Cost (for small teams)** | **Lower:** Higher hosting fees are offset by no labor hours required for upkeep. | **Higher:** Infrastructure savings are consumed by engineering overhead spent maintaining and recovering database state. |
