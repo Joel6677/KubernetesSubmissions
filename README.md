@@ -43,6 +43,8 @@
 - [3.8.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.8)
 - [3.9.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.9)
 - [3.10.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.10)
+- [3.11.](https://github.com/Joel6677/KubernetesSubmissions/tree/3.11)
+
 
 ### 3.9. DBaaS vs DIY
 

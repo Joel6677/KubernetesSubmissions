@@ -13,6 +13,13 @@ spec:
           containers:
             - name: todo-backend-backup
               image: joelheusala/todo-backend-backup:3.11
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
               env:
                 - name: POSTGRES_HOST
                   valueFrom:

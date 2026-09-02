@@ -12,6 +12,13 @@ spec:
           containers:
           - name: wikipedia-reader
             image: joelheusala/wikipedia-reader:1.1
+            resources:
+              requests:
+                cpu: 25m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
             imagePullPolicy: Always
             env:
                 - name: TODO_BACKEND_URL
