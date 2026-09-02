@@ -140,6 +140,8 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		log.Printf("created todo id=%d text=%q", newTodo.ID, newTodo.Text)
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(newTodo)
