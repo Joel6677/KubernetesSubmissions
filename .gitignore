@@ -5,3 +5,4 @@ log-output/reader/reader
 *.test
 
 key.json
+.DS_Store

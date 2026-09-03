@@ -29,16 +29,15 @@ func initDB() {
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	}
+}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS counter (id INT PRIMARY KEY, count INT NOT NULL)`)
+func ensureSchema() error {
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS counter (id INT PRIMARY KEY, count INT NOT NULL)`)
 	if err != nil {
-		log.Fatalf("failed to create table: %v", err)
+		return err
 	}
-
 	_, err = db.Exec(`INSERT INTO counter (id, count) VALUES (1, 0) ON CONFLICT (id) DO NOTHING`)
-	if err != nil {
-		log.Fatalf("failed to seed counter: %v", err)
-	}
+	return err
 }
 
 func incrementAndGet() (int, error) {
@@ -73,6 +72,18 @@ func pingCounter(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%d", count)
 }
 
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	if err := db.Ping(); err != nil {
+		http.Error(w, "db not ready", http.StatusServiceUnavailable)
+		return
+	}
+	if err := ensureSchema(); err != nil {
+		http.Error(w, "db schema not ready", http.StatusServiceUnavailable)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	port := getEnv("PORT")
 
@@ -82,6 +93,8 @@ func main() {
 
 	http.HandleFunc("/", pingpong)
 	http.HandleFunc("/pings", pingCounter)
+
+	http.HandleFunc("/healthz", healthHandler)
 
 	http.ListenAndServe(":"+port, nil)
 }

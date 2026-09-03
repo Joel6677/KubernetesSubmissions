@@ -8,11 +8,16 @@ import (
 	"strings"
 )
 
-func getPings() string {
-	pingPongURL := os.Getenv("PINGPONG_URL")
-	if pingPongURL == "" {
-		pingPongURL = "http://ping-pong-svc:2345/pings"
+func getPingPongURL() string {
+	url := os.Getenv("PINGPONG_URL")
+	if url == "" {
+		return "http://ping-pong-svc:2345/pings"
 	}
+	return url
+}
+
+func getPings() string {
+	pingPongURL := getPingPongURL()
 
 	res, err := http.Get(pingPongURL)
 	if err != nil {
@@ -52,6 +57,16 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		fileText, message, string(content), pCount)
 }
 
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	pingPongURL := getPingPongURL()
+	res, err := http.Get(pingPongURL)
+	if err != nil || res.StatusCode != http.StatusOK {
+		http.Error(w, "pingpong not reachable", http.StatusServiceUnavailable)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -60,5 +75,6 @@ func main() {
 
 	fmt.Printf("Server started in port %s\n", port)
 	http.HandleFunc("/", getStatus)
+	http.HandleFunc("/healthz", healthHandler)
 	http.ListenAndServe(":"+port, nil)
 }
