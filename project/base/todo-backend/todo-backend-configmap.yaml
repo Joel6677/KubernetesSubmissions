@@ -4,5 +4,5 @@ metadata:
   name: todo-backend-configmap
   namespace: project
 data:
-  POSTGRES_HOST: postgres-svc
+  POSTGRES_HOST: postgres-svc.project
   POSTGRES_PORT: "5432"

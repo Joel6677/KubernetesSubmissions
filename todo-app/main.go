@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
 )
 
@@ -17,6 +18,8 @@ type Todo struct {
 	ID   int    `json:"id"`
 	Text string `json:"text"`
 }
+
+var isHealthy atomic.Bool
 
 func getEnv(key string) string {
 	v := os.Getenv(key)
@@ -116,6 +119,33 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if !isHealthy.Load() {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy"})
+		return
+	}
+
+	res, err := http.Get(getTodoBackendURL())
+	if err != nil || res.StatusCode >= 500 {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy", "reason": "backend unreachable"})
+		return
+	}
+	res.Body.Close()
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func breakHandler(w http.ResponseWriter, r *http.Request) {
+	isHealthy.Store(false)
+	fmt.Println("todo-app marked unhealthy via /break")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	var formError string
 
@@ -161,6 +191,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 						margin-top: 8px;
 					}
 					.error { color: red; }
+					.break-btn { background: #c0392b; color: white; border: none; margin-top: 30px; }
 				</style>
 			</head>
 			<body>
@@ -186,12 +217,16 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprint(w, `
 				</ul>
+				<form method="POST" action="/break">
+					<button type="submit" class="break-btn">Break the app</button>
+				</form>
 			</body>
 		</html>
 	`)
 }
 
 func main() {
+	isHealthy.Store(true)
 	port := getEnv("PORT")
 
 	fmt.Printf("Server started in port %s\n", port)
@@ -208,6 +243,8 @@ func main() {
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/image", imageHandler)
+	http.HandleFunc("/healthz", healthzHandler)
+	http.HandleFunc("/break", breakHandler)
 
 	http.ListenAndServe(":"+port, nil)
 }

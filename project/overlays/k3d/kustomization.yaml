@@ -4,8 +4,6 @@ kind: Kustomization
 namespace: project
 
 resources:
-  - todo-app
-  - todo-backend
-  - postgres
-  - cronjobs
-
+  - ../../base
+  - namespace.yaml
+  - gateway.yaml

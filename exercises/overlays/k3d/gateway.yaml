@@ -3,7 +3,7 @@ kind: Gateway
 metadata:
   name: exercises-gateway
 spec:
-  gatewayClassName: traefik
+  gatewayClassName: eg
   listeners:
     - name: http
       protocol: HTTP

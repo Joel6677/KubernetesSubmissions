@@ -20,7 +20,19 @@ spec:
             claimName: image-claim
       containers:
         - name: todo-app
-          image: joelheusala/todo-app:2.6.1
+          image: joelheusala/todo-app:4.2.2
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
           resources:
             requests:
               cpu: 25m
@@ -33,7 +45,7 @@ spec:
             - name: PORT
               value: "8080"
             - name: TODO_BACKEND_URL
-              value: "http://todo-backend-svc:1234/todos" 
+              value: "http://todo-backend-svc.project:1234/todos" 
             - name: IMG_PATH
               value: "/shared/img.jpg"
             - name: IMG_URL

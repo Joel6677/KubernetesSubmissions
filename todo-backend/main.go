@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -17,7 +18,10 @@ type Todo struct {
 	Text string `json:"text"`
 }
 
-var db *sql.DB
+var (
+	db        *sql.DB
+	isHealthy atomic.Bool
+)
 
 func getEnv(key string) string {
 	v := os.Getenv(key)
@@ -151,11 +155,39 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if !isHealthy.Load() {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy"})
+		return
+	}
+
+	if err := db.Ping(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "unhealthy", "reason": "db unreachable"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func breakHandler(w http.ResponseWriter, r *http.Request) {
+	isHealthy.Store(false)
+	log.Println("todo-backend unhealthy via /break")
+	w.Write([]byte("todo-backend unhealthy"))
+}
+
 func main() {
 	log.SetOutput(os.Stdout)
+	isHealthy.Store(true)
 	port := getEnv("PORT")
 	initDB()
 	fmt.Printf("todo-backend started on port %s\n", port)
 	http.HandleFunc("/todos", loggingMiddleware(todosHandler))
+	http.HandleFunc("/healthz", healthHandler)
+	http.HandleFunc("/break", breakHandler)
 	http.ListenAndServe(":"+port, nil)
 }
