@@ -50,6 +50,8 @@
 
 - [4.1.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.1)
 - [4.2.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.2)
+- [4.3.](https://github.com/Joel6677/KubernetesSubmissions/tree/blob/4.3/README.md)
+
 
 
 
@@ -66,6 +68,9 @@
 | **Backup Methods** | **Seamless:** Native point-in-time recovery (PITR) and scheduled automated snapshots via GCP console/API and zero downtime restores. | **Complex:** Custom backup cronjobs or backup tools are required |
 | **Infrastructure Cost** | **Higher:** Infrastructure cost is higher due to included management layer and vendor markup. | **Lower:** Direct infrastructure cost is lower because it uses standard GKE worker node pool compute and persistent disks without management overhead markups |
 | **Total Cost (for small teams)** | **Lower:** Higher hosting fees are offset by no labor hours required for upkeep. | **Higher:** Infrastructure savings are consumed by engineering overhead spent maintaining and recovering database state. |
+
+### 4.3. Prometheus query
+sum(kube_pod_info{namespace="monitoring", created_by_kind="StatefulSet"})
 
 
 
