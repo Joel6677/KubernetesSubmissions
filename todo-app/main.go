@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -17,6 +18,46 @@ import (
 type Todo struct {
 	ID   int    `json:"id"`
 	Text string `json:"text"`
+	Done bool   `json:"done"`
+}
+
+func updateTodoDone(id int, done bool) error {
+	body, _ := json.Marshal(map[string]bool{"done": done})
+	url := fmt.Sprintf("%s/%d", getTodoBackendURL(), id)
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("todo-backend returned status %d", res.StatusCode)
+	}
+	return nil
+}
+
+func toggleDoneHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only post method works", http.StatusMethodNotAllowed)
+		return
+	}
+	r.ParseForm()
+	idStr := r.FormValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid id", http.StatusBadRequest)
+		return
+	}
+	done := r.FormValue("done") == "true"
+
+	if err := updateTodoDone(id, done); err != nil {
+		fmt.Println("Error updating todo:", err)
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 var isHealthy atomic.Bool
@@ -207,13 +248,34 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 					<button type="submit">Add</button>
 				</form>
 				<ul>
-					<li>Learn kubernetes basics</li>
-					<li>Deploy application to cluster</li>
-					<li>Configure persistent volumes</li>
-
+				
 	`)
 	for _, t := range todos {
-		fmt.Fprintf(w, "<li>%s</li>\n", t.Text)
+		checked := ""
+		if t.Done {
+			checked = "checked"
+		}
+		doneValue := "true"
+		if t.Done {
+			doneValue = "false"
+		}
+		fmt.Fprintf(w, `
+		<li>
+			<form method="POST" action="/toggle" style="display:inline;">
+				<input type="hidden" name="id" value="%d" />
+				<input type="hidden" name="done" value="%s" />
+				<input type="checkbox" %s onchange="this.form.submit()" />
+			</form>
+			<span style="%s">%s</span>
+		</li>
+	`, t.ID, doneValue, checked,
+			func() string {
+				if t.Done {
+					return "text-decoration: line-through; color: gray;"
+				}
+				return ""
+			}(),
+			t.Text)
 	}
 	fmt.Fprint(w, `
 				</ul>
@@ -245,6 +307,7 @@ func main() {
 	http.HandleFunc("/image", imageHandler)
 	http.HandleFunc("/healthz", healthzHandler)
 	http.HandleFunc("/break", breakHandler)
+	http.HandleFunc("/toggle", toggleDoneHandler)
 
 	http.ListenAndServe(":"+port, nil)
 }

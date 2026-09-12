@@ -20,7 +20,7 @@ spec:
             claimName: image-claim
       containers:
         - name: todo-app
-          image: joelheusala/todo-app:4.2.2
+          image: joelheusala/todo-app:4.5.2
           readinessProbe:
             httpGet:
               path: /healthz

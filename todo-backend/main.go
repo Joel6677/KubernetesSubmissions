@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 type Todo struct {
 	ID   int    `json:"id"`
 	Text string `json:"text"`
+	Done bool   `json:done`
 }
 
 var (
@@ -46,16 +49,22 @@ func initDB() {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS todos (
 			id SERIAL PRIMARY KEY,
-			text TEXT NOT NULL
+			text TEXT NOT NULL,
+			done BOOLEAN NOT NULL DEFAULT FALSE
 		)
 	`)
 	if err != nil {
 		log.Fatalf("failed to create table: %v", err)
 	}
+
+	_, err = db.Exec(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS done BOOLEAN NOT NULL DEFAULT FALSE`)
+	if err != nil {
+		log.Fatalf("failed to migrate table: %v", err)
+	}
 }
 
 func getTodos() ([]Todo, error) {
-	rows, err := db.Query(`SELECT id, text FROM todos ORDER BY id`)
+	rows, err := db.Query(`SELECT id, text, done FROM todos ORDER BY id`)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +73,7 @@ func getTodos() ([]Todo, error) {
 	todos := []Todo{}
 	for rows.Next() {
 		var t Todo
-		if err := rows.Scan(&t.ID, &t.Text); err != nil {
+		if err := rows.Scan(&t.ID, &t.Text, &t.Done); err != nil {
 			return nil, err
 		}
 		todos = append(todos, t)
@@ -76,10 +85,57 @@ func insertTodo(text string) (Todo, error) {
 	var t Todo
 	t.Text = text
 	err := db.QueryRow(
-		`INSERT INTO todos (text) VALUES ($1) RETURNING id`,
+		`INSERT INTO todos (text) VALUES ($1) RETURNING id, done`,
 		text,
-	).Scan(&t.ID)
+	).Scan(&t.ID, &t.Done)
 	return t, err
+}
+
+func updateTodoDone(id int, done bool) (Todo, error) {
+	var t Todo
+	err := db.QueryRow(
+		`UPDATE todos SET done = $1 WHERE id = $2 RETURNING id, text, done`,
+		done, id,
+	).Scan(&t.ID, &t.Text, &t.Done)
+	return t, err
+}
+
+func todoByIDHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Only put method allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/todos/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid todo id", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		Done bool `json:"done"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	updated, err := updateTodoDone(id, body.Done)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Todo not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		log.Printf("error updating todo: %v", err)
+		return
+	}
+
+	log.Printf("updated todo id=%d done=%v", updated.ID, updated.Done)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updated)
 }
 
 type responseWriter struct {
@@ -187,6 +243,7 @@ func main() {
 	initDB()
 	fmt.Printf("todo-backend started on port %s\n", port)
 	http.HandleFunc("/todos", loggingMiddleware(todosHandler))
+	http.HandleFunc("/todos/", loggingMiddleware(todoByIDHandler))
 	http.HandleFunc("/healthz", healthHandler)
 	http.HandleFunc("/break", breakHandler)
 	http.ListenAndServe(":"+port, nil)
