@@ -8,4 +8,5 @@ resources:
   - todo-backend
   - postgres
   - cronjobs
+  - broadcaster
 

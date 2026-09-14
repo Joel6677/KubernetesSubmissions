@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: joelheusala/todo-backend:4.5.3
+          image: joelheusala/todo-backend:4.6
           readinessProbe:
             httpGet:
               path: /healthz
@@ -36,6 +36,8 @@ spec:
               memory: 64Mi
           imagePullPolicy: Always
           env:
+            - name: NATS_URL
+              value: "nats://my-nats.nats.svc.cluster.local:4222"
             - name: PORT
               value: "8080"
             - name: POSTGRES_HOST

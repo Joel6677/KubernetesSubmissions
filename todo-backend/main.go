@@ -13,7 +13,33 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/nats-io/nats.go"
 )
+
+var nc *nats.Conn
+
+func initNATS() {
+	url := getEnv("NATS_URL")
+	var err error
+	nc, err = nats.Connect(url)
+	if err != nil {
+		log.Fatalf("failed to connect to NATS: %v", err)
+	}
+}
+
+func publishTodoEvent(eventType string, t Todo) {
+	payload, err := json.Marshal(map[string]interface{}{
+		"event": eventType,
+		"todo":  t,
+	})
+	if err != nil {
+		log.Printf("failed to marshal todo event: %v", err)
+		return
+	}
+	if err := nc.Publish("todos.updates", payload); err != nil {
+		log.Printf("failed to publish to NATS: %v", err)
+	}
+}
 
 type Todo struct {
 	ID   int    `json:"id"`
@@ -133,6 +159,7 @@ func todoByIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("updated todo id=%d done=%v", updated.ID, updated.Done)
+	publishTodoEvent("updated", updated)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updated)
@@ -201,6 +228,7 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("created todo id=%d text=%q", newTodo.ID, newTodo.Text)
+		publishTodoEvent("created", newTodo)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -241,6 +269,7 @@ func main() {
 	isHealthy.Store(true)
 	port := getEnv("PORT")
 	initDB()
+	initNATS()
 	fmt.Printf("todo-backend started on port %s\n", port)
 	http.HandleFunc("/todos", loggingMiddleware(todosHandler))
 	http.HandleFunc("/todos/", loggingMiddleware(todoByIDHandler))
