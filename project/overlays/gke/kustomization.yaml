@@ -9,10 +9,10 @@ resources:
 images:
 - name: joelheusala/todo-app
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-app
-  newTag: dfdb9563768e02c9f4d9a306145a17f1ccc8d101
+  newTag: e773a1175f685ba02457fda32baaf5199a1efe9c
 - name: joelheusala/todo-backend
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-backend
-  newTag: dfdb9563768e02c9f4d9a306145a17f1ccc8d101
+  newTag: e773a1175f685ba02457fda32baaf5199a1efe9c
 - name: joelheusala/wikipedia-reader
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/wikipedia-reader
-  newTag: dfdb9563768e02c9f4d9a306145a17f1ccc8d101
+  newTag: e773a1175f685ba02457fda32baaf5199a1efe9c
