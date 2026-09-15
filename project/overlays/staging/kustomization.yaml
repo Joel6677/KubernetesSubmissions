@@ -4,22 +4,34 @@ kind: Kustomization
 namespace: staging
 
 resources:
-  - ../../base
-  - gateway.yaml
-  - namespace.yaml
+- ../../base
+- gateway.yaml
+- namespace.yaml
 
 patches:
-  - target:
-      kind: CronJob
-      name: todo-backend-backup
-    patch: |-
-      $patch: delete
-  - target:
-      kind: Deployment
-      name: broadcaster
-    patch: |-
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: LOG_ONLY
-          value: "true"
+- patch: '$patch: delete'
+  target:
+    kind: CronJob
+    name: todo-backend-backup
+- patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: LOG_ONLY
+        value: "true"
+  target:
+    kind: Deployment
+    name: broadcaster
+images:
+- name: joelheusala/broadcaster
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/broadcaster
+  newTag: 691fc450bb8749c2bddc2df8588df0248b1431bf
+- name: joelheusala/todo-app
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-app
+  newTag: 691fc450bb8749c2bddc2df8588df0248b1431bf
+- name: joelheusala/todo-backend
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-backend
+  newTag: 691fc450bb8749c2bddc2df8588df0248b1431bf
+- name: joelheusala/wikipedia-reader
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/wikipedia-reader
+  newTag: 691fc450bb8749c2bddc2df8588df0248b1431bf
