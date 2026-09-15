@@ -183,7 +183,7 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 
 func breakHandler(w http.ResponseWriter, r *http.Request) {
 	isHealthy.Store(false)
-	fmt.Println("todo-app marked unhealthy via /break")
+	fmt.Println("Todo-app marked unhealthy via /break")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
