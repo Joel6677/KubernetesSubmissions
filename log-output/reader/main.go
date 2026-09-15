@@ -10,9 +10,11 @@ import (
 
 func getPingPongURL() string {
 	url := os.Getenv("PINGPONG_URL")
+
 	if url == "" {
 		return "http://ping-pong-svc:2345/pings"
 	}
+
 	return url
 }
 
