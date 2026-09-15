@@ -195,7 +195,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		text := r.FormValue("text")
 
 		if text == "" {
-			formError = "Todo cant be empty"
+			formError = "Todo can't be empty"
 		} else if len([]rune(text)) > 140 {
 			formError = "Todo must be max 140 characters"
 		} else {
