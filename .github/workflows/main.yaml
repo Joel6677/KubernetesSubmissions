@@ -64,15 +64,24 @@ jobs:
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v3
 
-      - name: Update image tags in Kustomize
+      - name: Update image tags in GKE overlay
         working-directory: project/overlays/gke
         run: |
           kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
           kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
           kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
 
-      - name: Commit updated kustomization.yaml
+      - name: Update image tags in k3d overlay
+        working-directory: project/overlays/k3d
+        run: |
+          kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
+          kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
+          kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
+
+      - name: Commit updated kustomization files
         uses: EndBug/add-and-commit@v10
         with:
-          add: 'project/overlays/gke/kustomization.yaml'
-          message: "New application version released ${{ github.sha }}"
+          add: |
+            project/overlays/gke/kustomization.yaml
+            project/overlays/k3d/kustomization.yaml
+          message: "Update image tags for GKE and k3d overlays to ${{ github.sha }}"
