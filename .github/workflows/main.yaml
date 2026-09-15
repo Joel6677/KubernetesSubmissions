@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - '**'
+    tags:
+      - '*'
 
 permissions:
   contents: write
@@ -13,28 +15,25 @@ env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
   REGISTRY: europe-north1-docker.pkg.dev
   REPOSITORY: my-repository
-  BRANCH: ${{ github.ref_name }}
 
 jobs:
-  build-publish-update:
-    name: Build, Publish and Update GitOps
+  staging:
+    name: Build, Publish and Update Staging
+    if: github.ref_type == 'branch'
     runs-on: ubuntu-latest
     environment: GKE_PROJECT
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-          
+
       - uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
           service_account: "${{ secrets.SERVICE_ACCOUNT }}"
 
-      - name: 'Set up Cloud SDK'
+      - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
-
-      - name: 'Use gcloud CLI'
-        run: gcloud info
 
       - run: gcloud --quiet auth configure-docker $REGISTRY
 
@@ -43,45 +42,106 @@ jobs:
           echo "TODO_APP_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$GITHUB_SHA" >> $GITHUB_ENV
           echo "TODO_BACKEND_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-backend:$GITHUB_SHA" >> $GITHUB_ENV
           echo "WIKIPEDIA_READER_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/wikipedia-reader:$GITHUB_SHA" >> $GITHUB_ENV
+          echo "BROADCASTER_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/broadcaster:$GITHUB_SHA" >> $GITHUB_ENV
 
       - name: Build and publish todo-app
         run: |
           docker build --tag "$TODO_APP_IMAGE" ./todo-app
           docker push "$TODO_APP_IMAGE"
 
-      - name: Build todo-backend
-        run: docker build --tag $TODO_BACKEND_IMAGE ./todo-backend
+      - name: Build and publish todo-backend
+        run: |
+          docker build --tag "$TODO_BACKEND_IMAGE" ./todo-backend
+          docker push "$TODO_BACKEND_IMAGE"
 
-      - name: Build wikipedia-reader
-        run: docker build --tag $WIKIPEDIA_READER_IMAGE ./wikipedia-reader
+      - name: Build and publish wikipedia-reader
+        run: |
+          docker build --tag "$WIKIPEDIA_READER_IMAGE" ./wikipedia-reader
+          docker push "$WIKIPEDIA_READER_IMAGE"
 
-      - name: Publish todo-backend
-        run: docker push $TODO_BACKEND_IMAGE
-
-      - name: Publish wikipedia-reader
-        run: docker push $WIKIPEDIA_READER_IMAGE
+      - name: Build and publish broadcaster
+        run: |
+          docker build --tag "$BROADCASTER_IMAGE" ./broadcaster
+          docker push "$BROADCASTER_IMAGE"
 
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v3
 
-      - name: Update image tags in GKE overlay
-        working-directory: project/overlays/gke
+      - name: Update image tags in staging overlay
+        working-directory: project/overlays/staging
         run: |
           kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
           kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
           kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
+          kustomize edit set image joelheusala/broadcaster=$BROADCASTER_IMAGE
 
-      - name: Update image tags in k3d overlay
-        working-directory: project/overlays/k3d
-        run: |
-          kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
-          kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
-          kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
-
-      - name: Commit updated kustomization files
+      - name: Commit updated staging kustomization
         uses: EndBug/add-and-commit@v10
         with:
-          add: |
-            project/overlays/gke/kustomization.yaml
-            project/overlays/k3d/kustomization.yaml
-          message: "Update image tags for GKE and k3d overlays to ${{ github.sha }}"
+          add: 'project/overlays/staging/kustomization.yaml'
+          message: "Update staging image tags to ${{ github.sha }}"
+
+  production:
+    name: Build, Publish and Update Production
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    environment: GKE_PROJECT
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - run: gcloud --quiet auth configure-docker $REGISTRY
+
+      - name: Form image tags
+        run: |
+          echo "TODO_APP_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-app:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          echo "TODO_BACKEND_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/todo-backend:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          echo "WIKIPEDIA_READER_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/wikipedia-reader:$GITHUB_REF_NAME" >> $GITHUB_ENV
+          echo "BROADCASTER_IMAGE=$REGISTRY/$PROJECT_ID/$REPOSITORY/broadcaster:$GITHUB_REF_NAME" >> $GITHUB_ENV
+
+      - name: Build and publish todo-app
+        run: |
+          docker build --tag "$TODO_APP_IMAGE" ./todo-app
+          docker push "$TODO_APP_IMAGE"
+
+      - name: Build and publish todo-backend
+        run: |
+          docker build --tag "$TODO_BACKEND_IMAGE" ./todo-backend
+          docker push "$TODO_BACKEND_IMAGE"
+
+      - name: Build and publish wikipedia-reader
+        run: |
+          docker build --tag "$WIKIPEDIA_READER_IMAGE" ./wikipedia-reader
+          docker push "$WIKIPEDIA_READER_IMAGE"
+
+      - name: Build and publish broadcaster
+        run: |
+          docker build --tag "$BROADCASTER_IMAGE" ./broadcaster
+          docker push "$BROADCASTER_IMAGE"
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v3
+
+      - name: Update image tags in production overlay
+        working-directory: project/overlays/production
+        run: |
+          kustomize edit set image joelheusala/todo-app=$TODO_APP_IMAGE
+          kustomize edit set image joelheusala/todo-backend=$TODO_BACKEND_IMAGE
+          kustomize edit set image joelheusala/wikipedia-reader=$WIKIPEDIA_READER_IMAGE
+          kustomize edit set image joelheusala/broadcaster=$BROADCASTER_IMAGE
+
+      - name: Commit updated production kustomization
+        uses: EndBug/add-and-commit@v10
+        with:
+          add: 'project/overlays/production/kustomization.yaml'
+          message: "Production release ${{ github.ref_name }}"
+

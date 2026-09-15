@@ -50,6 +50,8 @@ func main() {
 	}
 	defer nc.Close()
 
+	logOnly := os.Getenv("LOG_ONLY") == "true"
+
 	_, err = nc.QueueSubscribe("todos.updates", "broadcaster-group", func(msg *nats.Msg) {
 		var event TodoEvent
 		if err := json.Unmarshal(msg.Data, &event); err != nil {
@@ -66,6 +68,11 @@ func main() {
 				status = "done"
 			}
 			message = "A todo was updated: " + event.Todo.Text + " (" + status + ")"
+		}
+
+		if logOnly {
+			log.Printf("(staging) would forward: %s", message)
+			return
 		}
 
 		if err := sendToWebhook(webhookURL, message); err != nil {
