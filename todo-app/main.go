@@ -65,7 +65,7 @@ var isHealthy atomic.Bool
 func getEnv(key string) string {
 	v := os.Getenv(key)
 	if v == "" {
-		log.Fatalf("environment value %s is not set", key)
+		log.Fatalf("Environment value %s is not set", key)
 	}
 	return v
 }
