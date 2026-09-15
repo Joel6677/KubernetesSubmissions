@@ -21,13 +21,13 @@ patches:
 images:
 - name: joelheusala/broadcaster
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/broadcaster
-  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+  newTag: 90ee3b168c2048abf871b97cce2935c9fef8a4cd
 - name: joelheusala/todo-app
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-app
-  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+  newTag: 90ee3b168c2048abf871b97cce2935c9fef8a4cd
 - name: joelheusala/todo-backend
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-backend
-  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+  newTag: 90ee3b168c2048abf871b97cce2935c9fef8a4cd
 - name: joelheusala/wikipedia-reader
   newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/wikipedia-reader
-  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+  newTag: 90ee3b168c2048abf871b97cce2935c9fef8a4cd
