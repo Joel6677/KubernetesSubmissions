@@ -4,9 +4,9 @@ kind: Kustomization
 namespace: staging
 
 resources:
-  - ../../base
-  - gateway.yaml
-  - namespace.yaml
+- ../../base
+- gateway.yaml
+- namespace.yaml
 
 patches:
   - target:
