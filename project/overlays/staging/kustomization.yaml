@@ -9,12 +9,25 @@ resources:
 - namespace.yaml
 
 patches:
-  - target:
-      kind: CronJob
+- patch: |-
+    apiVersion: batch/v1
+    kind: CronJob
+    metadata:
       name: todo-backend-backup
-    patch: |-
-      apiVersion: batch/v1
-      kind: CronJob
-      metadata:
-        name: todo-backend-backup
-      $patch: delete
+    $patch: delete
+  target:
+    kind: CronJob
+    name: todo-backend-backup
+images:
+- name: joelheusala/broadcaster
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/broadcaster
+  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+- name: joelheusala/todo-app
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-app
+  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+- name: joelheusala/todo-backend
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-backend
+  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
+- name: joelheusala/wikipedia-reader
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/wikipedia-reader
+  newTag: 527b051608eb6f4977e2fa77461171a8e5cbac3e
