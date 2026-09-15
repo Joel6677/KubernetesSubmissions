@@ -4,6 +4,16 @@ kind: Kustomization
 namespace: project
 
 resources:
-  - ../../base
-  - namespace.yaml
-  - gateway.yaml
+- ../../base
+- namespace.yaml
+- gateway.yaml
+images:
+- name: joelheusala/todo-app
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-app
+  newTag: 10543c3bbbacfd6853b2ab512b5647dd083425dd
+- name: joelheusala/todo-backend
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/todo-backend
+  newTag: 10543c3bbbacfd6853b2ab512b5647dd083425dd
+- name: joelheusala/wikipedia-reader
+  newName: europe-north1-docker.pkg.dev/project-2fd7f60b-69b9-4e19-b97/my-repository/wikipedia-reader
+  newTag: 10543c3bbbacfd6853b2ab512b5647dd083425dd
