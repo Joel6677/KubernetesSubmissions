@@ -7,3 +7,4 @@ resources:
 - ../../base
 - namespace.yaml
 - gateway.yaml
+- referencegrant.yaml
