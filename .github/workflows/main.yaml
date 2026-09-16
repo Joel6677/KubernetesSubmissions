@@ -60,7 +60,7 @@ jobs:
         uses: imranismail/setup-kustomize@v3
 
       - name: Update staging image tags
-        working-directory: project/overlays/staging
+        working-directory: config-repo/project/overlays/staging
         run: |
           kustomize edit set image joelheusala/todo-app=joelheusala/todo-app:$GITHUB_SHA
           kustomize edit set image joelheusala/todo-backend=joelheusala/todo-backend:$GITHUB_SHA
@@ -82,7 +82,7 @@ jobs:
 
     steps:
 
-      - name: Checkout
+      - name: Checkout app code
         uses: actions/checkout@v4
         with:
           ref: main
@@ -90,7 +90,7 @@ jobs:
       - name: Checkout config repo
         uses: actions/checkout@v4
         with:
-          repository: <you>/KubernetesSubmissions-config
+          repository: Joel6677/KubernetesSubmissions-project-config
           token: ${{ secrets.CONFIG_REPO_PAT }}
           path: config-repo
 
@@ -124,7 +124,7 @@ jobs:
         uses: imranismail/setup-kustomize@v3
 
       - name: Update production image tags
-        working-directory: project/overlays/production
+        working-directory: config-repo/project/overlays/production
         run: |
           kustomize edit set image joelheusala/todo-app=joelheusala/todo-app:$GITHUB_REF_NAME
           kustomize edit set image joelheusala/todo-backend=joelheusala/todo-backend:$GITHUB_REF_NAME
