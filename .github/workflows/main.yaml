@@ -17,10 +17,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout app code
         uses: actions/checkout@v4
         with:
           ref: main
+      
+      - name: Checkout config repo
+        uses: actions/checkout@v4
+        with:
+          repository: Joel6677/KubernetesSubmissions-project-config
+          token: ${{ secrets.CONFIG_REPO_PAT }}
+          path: config-repo
+        
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -62,8 +70,10 @@ jobs:
       - name: Commit staging kustomization
         uses: EndBug/add-and-commit@v10
         with:
+          cwd: config-repo
           add: 'project/overlays/staging/kustomization.yaml'
           message: "Update staging image tags to ${{ github.sha }}"
+          push: true
 
   production:
     name: Build, Publish and Update Production
@@ -76,6 +86,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+
+      - name: Checkout config repo
+        uses: actions/checkout@v4
+        with:
+          repository: <you>/KubernetesSubmissions-config
+          token: ${{ secrets.CONFIG_REPO_PAT }}
+          path: config-repo
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -117,5 +134,7 @@ jobs:
       - name: Commit production kustomization
         uses: EndBug/add-and-commit@v10
         with:
+          cwd: config-repo
           add: 'project/overlays/production/kustomization.yaml'
           message: "Production release ${{ github.ref_name }}"
+          push: true

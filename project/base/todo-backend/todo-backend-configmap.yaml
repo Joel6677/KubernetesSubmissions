@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: todo-backend-configmap
-data:
-  POSTGRES_HOST: postgres-svc
-  POSTGRES_PORT: "5432"

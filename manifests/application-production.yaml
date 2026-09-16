@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Joel6677/KubernetesSubmissions
+    repoURL: https://github.com/Joel6677/KubernetesSubmissions-project-config
     path: project/overlays/production
     targetRevision: main
   destination:
