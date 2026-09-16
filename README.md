@@ -57,9 +57,65 @@
 - [4.7.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.7)
 - [4.8.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.8)
 - [4.9.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.9)
+- [4.10.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.10)
+- [4.10.](https://github.com/Joel6677/KubernetesSubmissions-project-config/tree/4.10)
 
+## Prerequisites
 
+- [k3d](https://k3d.io/) with a running cluster
+- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+- [Helm](https://helm.sh/) (used to install NATS, and optionally Prometheus/Grafana/ArgoCD) 
+- [Envoy Gateway](https://gateway.envoyproxy.io/)
 
+## Cluster setup (k3d)
+
+```bash
+k3d cluster create --agents 2 -p 8081:80@loadbalancer --k3s-arg '--disable=traefik@server:0'
+```
+
+```bash
+kubectl apply --server-side -f https://github.com/envoyproxy/gateway/releases/latest/download/install.yaml
+kubectl -n envoy-gateway-system rollout status deployment/envoy-gateway --timeout=180s
+```
+
+### NATS
+
+```bash
+helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+helm repo update
+helm upgrade --install my-nats nats/nats \
+  --namespace nats \
+  --create-namespace \
+  --set promExporter.enabled=true
+```
+
+## Running the exercises (Log output & Ping-pong)
+
+```bash
+cd exercises_config/overlays/k3d
+kubectl apply -k .
+```
+
+## Running the project (Todo App)
+
+```bash
+cd project/overlays/production   # or /staging
+kubectl apply -k .
+```
+
+### Required secrets
+
+```bash
+kubectl create secret generic todo-postgres-credentials \
+  --from-literal=POSTGRES_USER=postgres \
+  --from-literal=POSTGRES_PASSWORD=<pick-a-password> \
+  --from-literal=POSTGRES_DB=todos \
+  -n <namespace>
+
+kubectl create secret generic broadcaster-webhook \
+  --from-literal=WEBHOOK_URL='<your Discord/Slack/generic webhook url>' \
+  -n <namespace>
+```
 
 ### 3.9. DBaaS vs DIY
 
