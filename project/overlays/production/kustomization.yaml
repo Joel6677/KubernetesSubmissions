@@ -8,3 +8,16 @@ resources:
 - namespace.yaml
 - gateway.yaml
 - referencegrant.yaml
+images:
+- name: joelheusala/broadcaster
+  newName: joelheusala/broadcaster
+  newTag: v1.1
+- name: joelheusala/todo-app
+  newName: joelheusala/todo-app
+  newTag: v1.1
+- name: joelheusala/todo-backend
+  newName: joelheusala/todo-backend
+  newTag: v1.1
+- name: joelheusala/wikipedia-reader
+  newName: joelheusala/wikipedia-reader
+  newTag: v1.1
