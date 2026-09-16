@@ -5,7 +5,7 @@ namespace: staging
 
 resources:
 - ../../base
-- gateway.yaml
+- route.yaml
 - namespace.yaml
 
 patches:
