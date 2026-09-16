@@ -112,7 +112,7 @@ jobs:
 
       - name: Build and push wikipedia-reader
         run: |
-          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_REF_NAME" ./project_appswikipedia-reader
+          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_REF_NAME" ./project_apps/wikipedia-reader
           docker push "joelheusala/wikipedia-reader:$GITHUB_REF_NAME"
 
       - name: Build and push broadcaster
