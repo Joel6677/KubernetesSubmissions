@@ -6,7 +6,7 @@ metadata:
 spec:
   parentRefs:
     - name: project-gateway
-      namespace: project
+      namespace: production
   hostnames:
     - "staging.localhost"
   rules:

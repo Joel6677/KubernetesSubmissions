@@ -19,6 +19,8 @@ metadata:
 spec:
   parentRefs:
     - name: project-gateway
+  hostnames:
+    - "production.localhost"
   rules:
     - matches:
         - path:
