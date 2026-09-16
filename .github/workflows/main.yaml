@@ -38,22 +38,22 @@ jobs:
 
       - name: Build and push todo-app
         run: |
-          docker build --tag "joelheusala/todo-app:$GITHUB_SHA" ./todo-app
+          docker build --tag "joelheusala/todo-app:$GITHUB_SHA" ./project_apps/todo-app
           docker push "joelheusala/todo-app:$GITHUB_SHA"
 
       - name: Build and push todo-backend
         run: |
-          docker build --tag "joelheusala/todo-backend:$GITHUB_SHA" ./todo-backend
+          docker build --tag "joelheusala/todo-backend:$GITHUB_SHA" ./project_apps/todo-backend
           docker push "joelheusala/todo-backend:$GITHUB_SHA"
 
       - name: Build and push wikipedia-reader
         run: |
-          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_SHA" ./wikipedia-reader
+          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_SHA" ./project_apps/wikipedia-reader
           docker push "joelheusala/wikipedia-reader:$GITHUB_SHA"
 
       - name: Build and push broadcaster
         run: |
-          docker build --tag "joelheusala/broadcaster:$GITHUB_SHA" ./broadcaster
+          docker build --tag "joelheusala/broadcaster:$GITHUB_SHA" ./project_apps/broadcaster
           docker push "joelheusala/broadcaster:$GITHUB_SHA"
 
       - name: Set up Kustomize
@@ -102,22 +102,22 @@ jobs:
 
       - name: Build and push todo-app
         run: |
-          docker build --tag "joelheusala/todo-app:$GITHUB_REF_NAME" ./todo-app
+          docker build --tag "joelheusala/todo-app:$GITHUB_REF_NAME" ./project_apps/todo-app
           docker push "joelheusala/todo-app:$GITHUB_REF_NAME"
 
       - name: Build and push todo-backend
         run: |
-          docker build --tag "joelheusala/todo-backend:$GITHUB_REF_NAME" ./todo-backend
+          docker build --tag "joelheusala/todo-backend:$GITHUB_REF_NAME" ./project_apps/todo-backend
           docker push "joelheusala/todo-backend:$GITHUB_REF_NAME"
 
       - name: Build and push wikipedia-reader
         run: |
-          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_REF_NAME" ./wikipedia-reader
+          docker build --tag "joelheusala/wikipedia-reader:$GITHUB_REF_NAME" ./project_appswikipedia-reader
           docker push "joelheusala/wikipedia-reader:$GITHUB_REF_NAME"
 
       - name: Build and push broadcaster
         run: |
-          docker build --tag "joelheusala/broadcaster:$GITHUB_REF_NAME" ./broadcaster
+          docker build --tag "joelheusala/broadcaster:$GITHUB_REF_NAME" ./project_apps/broadcaster
           docker push "joelheusala/broadcaster:$GITHUB_REF_NAME"
 
       - name: Set up Kustomize
