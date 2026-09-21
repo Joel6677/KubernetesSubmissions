@@ -61,7 +61,7 @@
 - [4.10.](https://github.com/Joel6677/KubernetesSubmissions-project-config/tree/4.10)
 
 ### Chapter 6
-- [5.1.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.1)
+- [5.1.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.1/chapter_6/5.1)
 
 
 
