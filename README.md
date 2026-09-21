@@ -60,6 +60,11 @@
 - [4.10.](https://github.com/Joel6677/KubernetesSubmissions/tree/4.10)
 - [4.10.](https://github.com/Joel6677/KubernetesSubmissions-project-config/tree/4.10)
 
+### Chapter 6
+- [5.1.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.1)
+
+
+
 ## Prerequisites
 
 - [k3d](https://k3d.io/) with a running cluster
