@@ -35,6 +35,17 @@ func getPings() string {
 	return string(body)
 }
 
+func fetchGreeting() string {
+	greeterURL := os.Getenv("GREETER_URL")
+	res, err := http.Get(greeterURL)
+	if err != nil {
+		return "greeting unavailable"
+	}
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+	return string(body)
+}
+
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	content, err := os.ReadFile("/shared/output.txt")
 	if err != nil {
@@ -54,9 +65,12 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 
 	pCount := getPings()
 
+	greeting := fetchGreeting()
+
 	w.Header().Set("Content-Type", "text/plain")
-	fmt.Fprintf(w, "file content: %s\nenv variable: MESSAGE=%s\n%s\nPing / Pongs: %s\n",
+	fmt.Fprintf(w, "file contents: %s\nenv variable: MESSAGE=%s\n%s\nPing / Pongs: %s\n",
 		fileText, message, string(content), pCount)
+	fmt.Fprintf(w, "greetings: %s\n", greeting)
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

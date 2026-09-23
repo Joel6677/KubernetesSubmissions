@@ -63,6 +63,7 @@
 ### Chapter 6
 - [5.1.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.1/chapter_6/5.1)
 - [5.2.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.2)
+- [5.3.](https://github.com/Joel6677/KubernetesSubmissions/tree/5.3)
 
 
 

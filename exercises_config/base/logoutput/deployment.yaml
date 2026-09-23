@@ -30,7 +30,7 @@ spec:
               - name: shared-image
                 mountPath: /shared
           - name: reader
-            image: joelheusala/log-output-reader:4.7
+            image: joelheusala/log-output-reader:5.3
             imagePullPolicy: Always
             env:
               - name: PORT
@@ -42,6 +42,8 @@ spec:
                   configMapKeyRef:
                     name: log-output-configmap
                     key: MESSAGE
+              - name: GREETER_URL
+                value: "http://greeter-svc:8080/"
             volumeMounts:
               - name: shared-image
                 mountPath: /shared

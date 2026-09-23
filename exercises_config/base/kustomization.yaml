@@ -7,3 +7,5 @@ resources:
   - logoutput
   - pingpong
   - postgres
+  - greeter
+  - pvc.yaml
