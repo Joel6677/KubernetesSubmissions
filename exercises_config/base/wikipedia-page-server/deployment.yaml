@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wikipedia-page-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wikipedia-page-server
+  template:
+    metadata:
+      labels:
+        app: wikipedia-page-server
+    spec:
+      volumes:
+        - name: www
+          emptyDir: {}
+      initContainers:
+        - name: init-fetch
+          image: curlimages/curl:8.10.1
+          command:
+            - sh
+            - -c
+            - |
+              curl -sL https://en.wikipedia.org/wiki/Kubernetes -o /www/index.html
+          volumeMounts:
+            - name: www
+              mountPath: /www
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: www
+              mountPath: /usr/share/nginx/html
+        - name: wikipedia-sidecar
+          image: curlimages/curl:8.10.1
+          command:
+            - sh
+            - -c
+            - |
+              while true; do
+                SLEEP=$(( (RANDOM % 601) + 300 ))
+                echo "sleeping for ${SLEEP}s"
+                sleep "$SLEEP"
+                
+                echo "fetching random wikipedia page"
+                curl -sL https://en.wikipedia.org/wiki/Special:Random -o /www/index.html
+              done
+          volumeMounts:
+            - name: www
+              mountPath: /www
