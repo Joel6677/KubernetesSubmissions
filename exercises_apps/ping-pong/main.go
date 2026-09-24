@@ -89,6 +89,10 @@ func main() {
 
 	initDB()
 
+	if err := ensureSchema(); err != nil {
+		log.Fatalf("failed to initialize database schema: %v", err)
+	}
+
 	fmt.Printf("Server started in port %s\n", port)
 
 	http.HandleFunc("/", pingpong)

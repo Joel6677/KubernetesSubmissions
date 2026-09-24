@@ -36,7 +36,7 @@ spec:
               - name: PORT
                 value: "8080"
               - name: PINGPONG_URL
-                value: "http://ping-pong-svc:2345/pings"
+                value: "http://pingpong.exercises.svc.cluster.local/pings"
               - name: MESSAGE
                 valueFrom:
                   configMapKeyRef:
